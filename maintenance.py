@@ -90,20 +90,51 @@ class Maintenance:
         if flag is False:
             return 0
 
-    ## Add a single function for running maintenance    
+## Add a single function for running maintenance    
+class run_maintenance:
 
+    def __init__(self,mydb):
+        self.mydb = mydb
+    
+    def run(self):
+        choice = -1
+        m = Maintenance(self.mydb)
+
+        while choice == -1:
+            
+            print("Welcome to Maintenance Mode!!!!")
+            print("1. View_Inventory")
+            print("2. Re_Stock")
+            print("3. Refresh_Change")
+            print("4. Add_drink")
+            print("5. Add Denomination")
+
+            n = int(input("Enter your choice..."))
+
+            if n==1:
+                m.view_inventory()
+            elif n==2:
+                m.re_stock()
+            elif n==3:
+                m.refresh_change()
+            elif n==4:
+                m.add_drink()
+            elif n==5:
+                m.add_denomination()
+            else:
+                print("Invalid Input")
+
+            choice = int(input("Enter -1 for continuing = "))
+
+        print("Exiting ... Thank You....")        
+
+                        
 if __name__ == '__main__':
 
     client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
     mydb = client['Vending_Machine']
-    
-    m = Maintenance(mydb)
-    m.view_inventory()
-    #m.re_stock()
-    #m.add_drink()
-    #m.add_denomination()  
-    m.refresh_change()
-
+    rm = run_maintenance(mydb)
+    rm.run()
 
 
     
