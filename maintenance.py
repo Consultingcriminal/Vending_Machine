@@ -7,7 +7,6 @@ class Maintenance:
         self.inventory = self.my_db["Inventory"]
         self.denominations = self.my_db["Denominations"]
         
-
     def view_inventory(self):
         self.items = self.inventory.find()
         print("Name---Quantity")
@@ -19,19 +18,22 @@ class Maintenance:
         self.items = self.inventory.find()
         for item in self.items:
             quan = int(input("Enter the Quantity of {} : ".format(item["Name"])))
-
-            # Add A Checking Module
-
-            if item["Available"] == "A":
-                quan = quan + item["Quantity"]
-                self.inventory.update_one(
-                    {"Name":item["Name"]},
-                    {"$set":{"Quantity":quan}})
+            quan = self.input_check_cycles(quan,2,item["Name"]) 
+            if quan == 0:
+                print("Could not update {}".format(item["Name"]))
+            else:    
+                if item["Available"] == "A":
+                    quan = quan + item["Quantity"]
+                    self.inventory.update_one(
+                        {"Name":item["Name"]},
+                        {"$set":{"Quantity":quan}})    
             
-            else:
-                self.inventory.update_one(
-                    {"Name":item["Name"]},
-                    {"$set":{"Quantity":quan,"Available":"A"}})
+                else:
+                    self.inventory.update_one(
+                        {"Name":item["Name"]},
+                        {"$set":{"Quantity":quan,"Available":"A"}})
+
+                print("Item = {} updated".format(item["Name"]))
 
     def add_drink(self):
 
@@ -55,13 +57,38 @@ class Maintenance:
         self.deno_list = self.denominations.find()
         for item in self.deno_list:
             quan = int(input("Enter the Quantity of {} : ".format(item["Deno"])))
-
-            # Add A Checking Module
-            quan = quan + item["Quan"]
-            self.denominations.update_one(
-                {"Deno":item["Deno"]},
-                {"$set":{"Quan":quan}})
+            quan = self.input_check_cycles(quan,2,item["Deno"]) 
+            
+            if quan == 0:
+                print("Could not update {}".format(item["Deno"]))
+            
+            else:    
+                quan = quan + item["Quan"]
+                self.denominations.update_one(
+                    {"Deno":item["Deno"]},
+                    {"$set":{"Quan":quan}})
+                print("Item = {} updated".format(item["Deno"]))    
               
+    @staticmethod
+    def check_input(a):
+        if a>0:
+            return True
+        return False
+
+    def input_check_cycles(self,ip,cycles,i_name):
+        flag = False
+        count = 0
+
+        while count < cycles:
+            if self.check_input(ip) == True:
+                flag = True
+                return ip
+            else:
+                count = count + 1
+                ip = int(input("Enter the Appropriate Quantity of {} : ".format(i_name))) 
+        
+        if flag is False:
+            return 0
 
     ## Add a single function for running maintenance    
 
@@ -71,7 +98,7 @@ if __name__ == '__main__':
     mydb = client['Vending_Machine']
     
     m = Maintenance(mydb)
-    #m.view_inventory()
+    m.view_inventory()
     #m.re_stock()
     #m.add_drink()
     #m.add_denomination()  
