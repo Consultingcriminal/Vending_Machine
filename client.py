@@ -96,27 +96,37 @@ class Vending_Machine:
                 if amt_inserted >= -1*self.change:
                     flag = 1
                     print("Processing Change")
+                    if self.make_change(amt_inserted + self.change) is None:
+                        print("Transaction Unsuccessful not enough coins try again...")
+                    else:
+                        print("Collect Items")
+                        print(self.make_change(amt_inserted + self.change))    
+
                     break        
             
             if flag == 0:
                 print("Transaction Terminated")
         else:
             print("Processing Your Change")
+            if self.make_change(self.change) is None:
+                print("Transaction Unsuccessful not enough coins try again...")
+            else:
+                print("Collect Items")
+                print("Collect Change ={}".format(self.make_change(self.change))) 
 
 
     def make_change(self,change_amt):
         if change_amt == 0:
-            #Complete transaction and update database
-            print("Collect Items")     
+            return 0     
         else:
             denom_aval = []
             self.coins_quan = self.denominations.find({"Quan": {"$gt": 0 } })
 
             for coins in self.coins_quan:
-                coins_dict = {"value":coins["Deno"],"count":coins["Quan"]}
+                coins_dict = {"Deno":coins["Deno"],"Quan":coins["Quan"]}
                 denom_aval.append(coins_dict)
             result = self.getchange(denom_aval,change_amt)
-            print(result)
+            return result
 
     def getchange(self,coins, amount):
         
@@ -134,16 +144,16 @@ class Vending_Machine:
             bestChange = None
             coin = coins[coinIndex]
             # Start by taking as many as possible from this coin
-            cantake = min(amount // coin["value"], coin["count"])
+            cantake = min(amount // coin["Deno"], coin["Quan"])
             # Reduce the number taken from this coin until 0
             for count in range(cantake, -1, -1):
                 # Recurse, taking out this coin as a possible choice
-                change = recurse(amount - coin["value"] * count, coinIndex + 1, 
+                change = recurse(amount - coin["Deno"] * count, coinIndex + 1, 
                                                                 coinCount + count)
                 # Do we have a solution that is better than the best so far?
                 if change != None: 
                     if count: # Does it involve this coin?
-                        change.append({ "value": coin["value"], "count": count })
+                        change.append({ "Deno": coin["Deno"], "Quan": count })
                     bestChange = change # register this as the best so far
             return bestChange
 
@@ -154,5 +164,4 @@ if __name__ == '__main__':
     mydb = client['Vending_Machine']
     cl = Vending_Machine(mydb)
     cl.vend()
-    #cl.take_order()
-    cl.make_change(24)
+    cl.take_order()
