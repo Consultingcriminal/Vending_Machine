@@ -102,14 +102,57 @@ class Vending_Machine:
                 print("Transaction Terminated")
         else:
             print("Processing Your Change")
-       
+
+
+    def make_change(self,change_amt):
+        if change_amt == 0:
+            #Complete transaction and update database
+            print("Collect Items")     
+        else:
+            denom_aval = []
+            self.coins_quan = self.denominations.find({"Quan": {"$gt": 0 } })
+
+            for coins in self.coins_quan:
+                coins_dict = {"value":coins["Deno"],"count":coins["Quan"]}
+                denom_aval.append(coins_dict)
+            result = self.getchange(denom_aval,change_amt)
+            print(result)
+
+    def getchange(self,coins, amount):
         
+        minCount = None
 
+        def recurse(amount, coinIndex, coinCount):
+            nonlocal minCount
+            if amount == 0:
+                if minCount == None or coinCount < minCount:
+                    minCount = coinCount
+                    return [] # success
+                return None # not optimal
+            if coinIndex >= len(coins):
+                return None # failure
+            bestChange = None
+            coin = coins[coinIndex]
+            # Start by taking as many as possible from this coin
+            cantake = min(amount // coin["value"], coin["count"])
+            # Reduce the number taken from this coin until 0
+            for count in range(cantake, -1, -1):
+                # Recurse, taking out this coin as a possible choice
+                change = recurse(amount - coin["value"] * count, coinIndex + 1, 
+                                                                coinCount + count)
+                # Do we have a solution that is better than the best so far?
+                if change != None: 
+                    if count: # Does it involve this coin?
+                        change.append({ "value": coin["value"], "count": count })
+                    bestChange = change # register this as the best so far
+            return bestChange
 
+        return recurse(amount, 0, 0)
 
 if __name__ == '__main__':
     client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
     mydb = client['Vending_Machine']
     cl = Vending_Machine(mydb)
     cl.vend()
-    cl.take_order()
+    #cl.take_order()
+    cl.make_change(24)
