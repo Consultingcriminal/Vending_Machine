@@ -83,12 +83,12 @@ class Vending_Machine:
         if self.change < 0:
             print("Insert {} in denominations of 1,5,25,50 ".format(-1*self.change))
             tries = 3
-            flag = 0
+            flag = False
             for _ in range(tries):
                 amt_inserted = sum(list(map(int,input('insert ' + str(-1*self.change - 0) + ': in denominations of 1,5,25,50 (space separated)  - ').split())))
 
                 if amt_inserted > -1*self.change:
-                    flag = 1
+                    flag = True
                     print("Processing Change")
                     if self.make_change(amt_inserted + self.change) is None:
                         print("Transaction Unsuccessful not enough coins try again...")
@@ -99,12 +99,13 @@ class Vending_Machine:
                         self.update_denominations()
                 
                 elif amt_inserted == -1*self.change:
+                    flag = True
                     print("Collect Your Items")
                     self.update_inventory()
-                    
+
                 break        
             
-            if flag == 0:
+            if flag is False:
                 print("Transaction Terminated")
 
         elif self.change == 0:
