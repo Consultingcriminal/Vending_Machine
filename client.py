@@ -11,8 +11,8 @@ class Vending_Machine:
         
         print("Welcome To The Vending Machine...")
         print("--- Currently Offering ---")
-        self.items = self.inventory.find({ "Available": "A" })
-        self.len = self.inventory.count_documents({ "Available": "A" })
+        self.items = self.inventory.find({"Quantity": {"$gt": 0 } })
+        self.len = self.inventory.count_documents({"Quantity": {"$gt": 0 } })
         print("Name---Price")
 
         for item in self.items:
@@ -45,7 +45,7 @@ class Vending_Machine:
         self.drinks_query = {"Name":drink}
         self.available = self.inventory.find_one(self.drinks_query)
 
-        if quantity < self.available["Quantity"]:
+        if quantity <= self.available["Quantity"]:
             self.amount = self.available["Price"]*quantity
             new_quan = self.available["Quantity"] - quantity
 
@@ -53,19 +53,13 @@ class Vending_Machine:
             self.orders.append(update_dict)
             return self.amount
 
-        elif quantity == self.available["Quantity"]:
-                self.amount = self.available["Price"]*quantity
-                update_dict = {"Name":drink,"Quantity":0,"Available":"N"}
-                self.orders.append(update_dict)
-                return self.amount
-
         else:
                 print("Sorry we have only {} {} Available ... Do you want to continue with this many...".format(self.available["Quantity"],self.drink))
                 c = int(input("Input -1 for yes.. or enter lower quantity "))
 
                 if c == -1:
                     self.amount = self.available["Price"]*self.available["Quantity"]
-                    update_dict = {"Name":drink,"Quantity":0,"Available":"N"}
+                    update_dict = {"Name":drink,"Quantity":0}
                     self.orders.append(update_dict)
                     return self.amount
 
@@ -93,40 +87,50 @@ class Vending_Machine:
             for _ in range(tries):
                 amt_inserted = sum(list(map(int,input('insert ' + str(-1*self.change - 0) + ': in denominations of 1,5,25,50 (space separated)  - ').split())))
 
-                if amt_inserted >= -1*self.change:
+                if amt_inserted > -1*self.change:
                     flag = 1
                     print("Processing Change")
                     if self.make_change(amt_inserted + self.change) is None:
                         print("Transaction Unsuccessful not enough coins try again...")
                     else:
                         print("Collect Items")
-                        print(self.make_change(amt_inserted + self.change))    
-
-                    break        
+                        print(self.make_change(amt_inserted + self.change))
+                        self.update_inventory()
+                        self.update_denominations()
+                
+                elif amt_inserted == -1*self.change:
+                    print("Collect Your Items")
+                    self.update_inventory()
+                    
+                break        
             
             if flag == 0:
                 print("Transaction Terminated")
+
+        elif self.change == 0:
+            print("Collect Your Items")
+            self.update_inventory()
         else:
             print("Processing Your Change")
             if self.make_change(self.change) is None:
                 print("Transaction Unsuccessful not enough coins try again...")
             else:
                 print("Collect Items")
-                print("Collect Change ={}".format(self.make_change(self.change))) 
+                print("Collect Change ={}".format(self.make_change(self.change)))
+                self.update_inventory()
+                self.update_denominations() 
 
 
     def make_change(self,change_amt):
-        if change_amt == 0:
-            return 0     
-        else:
-            denom_aval = []
-            self.coins_quan = self.denominations.find({"Quan": {"$gt": 0 } })
+        
+        denom_aval = []
+        self.coins_quan = self.denominations.find({"Quan": {"$gt": 0 } })
 
-            for coins in self.coins_quan:
-                coins_dict = {"Deno":coins["Deno"],"Quan":coins["Quan"]}
-                denom_aval.append(coins_dict)
-            result = self.getchange(denom_aval,change_amt)
-            return result
+        for coins in self.coins_quan:
+            coins_dict = {"Deno":coins["Deno"],"Quan":coins["Quan"]}
+            denom_aval.append(coins_dict)
+        self.result = self.getchange(denom_aval,change_amt)
+        return self.result
 
     def getchange(self,coins, amount):
         
@@ -159,9 +163,28 @@ class Vending_Machine:
 
         return recurse(amount, 0, 0)
 
+    def update_inventory(self):
+        for item in self.orders:
+            self.inventory.update_one(
+                    {"Name":item["Name"]},
+                    {"$set":{"Quantity":item["Quantity"]}})
+                        
+    def update_denominations(self):
+        for item in self.result:
+            new_quan = self.denominations.find_one({"Deno":item["Deno"]})["Quan"] - item["Quan"]
+            self.denominations.update_one({"Deno":item["Deno"]},
+                    {"$set":{"Quan":new_quan}})
+
+
+
 if __name__ == '__main__':
     client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
     mydb = client['Vending_Machine']
     cl = Vending_Machine(mydb)
     cl.vend()
     cl.take_order()
+
+   
+    
+
+    
