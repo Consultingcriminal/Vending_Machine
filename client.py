@@ -13,6 +13,7 @@ class Vending_Machine:
         print("--- Currently Offering ---")
         self.adrinks = { "Available": "A" }
         self.items = self.inventory.find(self.adrinks)
+        self.len = self.inventory.count_documents(self.adrinks)
         print("Name---Price")
 
         for item in self.items:
@@ -20,16 +21,26 @@ class Vending_Machine:
 
 
     def take_order(self):
-        ## Add a check that there is atleast 1 item available and modify the range(n) to min(num_items,n)
         n = int(input("Enter the types of drinks you want to order : "))
         self.order_amount = 0
-
-        for _ in range(n):
+        self.orders = []
+        for _ in range(min(self.len,n)):
             self.drink =  input("Enter The Name of the Drink  :  ")
             self.quantity = int(input("Enter the Quantity : "))
-            self.order_amount = self.order_amount + self.check_inventory(self.drink,self.quantity)
-        print(self.order_amount)    
+            self.order_amount = self.order_amount + self.get_order_quan(self.drink,self.quantity)
+        print("Your order value is : {}".format(self.order_amount))
+        print(self.orders)
+        confirm = input("Enter Y for continuing with this transaction : ")
 
+        if confirm == "Y":
+            print("Processing...")
+        else:
+            print("Transaction Aborted...")
+
+        # Cleaning the orders list
+        #self.orders = []
+
+    # Modify - Update database only after payment
     def check_inventory(self,drink,quantity):        
             self.drinks_query = {"Name":drink}
             self.available = self.inventory.find_one(self.drinks_query)
@@ -71,6 +82,47 @@ class Vending_Machine:
                 else:
                     print("The Transaction for {} could not be processed".format(drink))
                     return 0    
+
+    def get_order_quan(self,drink,quantity):
+        
+        self.drinks_query = {"Name":drink}
+        self.available = self.inventory.find_one(self.drinks_query)
+
+        if quantity < self.available["Quantity"]:
+            self.amount = self.available["Price"]*quantity
+            new_quan = self.available["Quantity"] - quantity
+
+            update_dict = {"Name":drink,"Quantity":new_quan}
+            self.orders.append(update_dict)
+            return self.amount
+
+        elif quantity == self.available["Quantity"]:
+                self.amount = self.available["Price"]*quantity
+                update_dict = {"Name":drink,"Quantity":0,"Available":"N"}
+                self.orders.append(update_dict)
+                return self.amount
+
+        else:
+                print("Sorry we have only {} {} Available ... Do you want to continue with this many...".format(self.available["Quantity"],self.drink))
+                c = int(input("Input -1 for yes.. or enter lower quantity "))
+
+                if c == -1:
+                    self.amount = self.available["Price"]*self.available["Quantity"]
+                    update_dict = {"Name":drink,"Quantity":0,"Available":"N"}
+                    self.orders.append(update_dict)
+                    return self.amount
+
+                elif c < self.available["Quantity"] and c > 0:
+                    self.amount = self.available["Price"]*c
+                    new_quan = self.available["Quantity"] - c
+                    update_dict = {"Name":drink,"Quantity":new_quan}
+                    self.orders.append(update_dict)
+                    return self.amount
+
+                else:
+                    print("The Transaction for {} could not be processed".format(drink))
+                    return 0             
+
 
 
 if __name__ == '__main__':
