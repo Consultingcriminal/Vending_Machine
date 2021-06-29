@@ -11,9 +11,8 @@ class Vending_Machine:
         
         print("Welcome To The Vending Machine...")
         print("--- Currently Offering ---")
-        self.adrinks = { "Available": "A" }
-        self.items = self.inventory.find(self.adrinks)
-        self.len = self.inventory.count_documents(self.adrinks)
+        self.items = self.inventory.find({ "Available": "A" })
+        self.len = self.inventory.count_documents({ "Available": "A" })
         print("Name---Price")
 
         for item in self.items:
@@ -30,58 +29,16 @@ class Vending_Machine:
             self.order_amount = self.order_amount + self.get_order_quan(self.drink,self.quantity)
         print("Your order value is : {}".format(self.order_amount))
         print(self.orders)
-        confirm = input("Enter Y for continuing with this transaction : ")
+        confirm = input("Enter Y for continuing with this transaction : ").upper()
 
         if confirm == "Y":
             print("Processing...")
+            self.initiate_trans(self.order_amount)
         else:
             print("Transaction Aborted...")
 
         # Cleaning the orders list
         #self.orders = []
-
-    # Modify - Update database only after payment
-    def check_inventory(self,drink,quantity):        
-            self.drinks_query = {"Name":drink}
-            self.available = self.inventory.find_one(self.drinks_query)
-
-            if quantity < self.available["Quantity"]:
-                self.amount = self.available["Price"]*quantity
-                new_quan = self.available["Quantity"] - quantity
-                self.inventory.update_one(
-                        {"Name":drink},
-                        {"$set":{"Quantity":new_quan}})
-                return self.amount
-
-            elif quantity == self.available["Quantity"]:
-                self.amount = self.available["Price"]*quantity
-                self.inventory.update_one(
-                        {"Name":drink},
-                        {"$set":{"Quantity":0,"Available":"N"}})
-                return self.amount
-
-            else:
-                print("Sorry we have only {} {} Available ... Do you want to continue with this many...".format(self.available["Quantity"],self.drink))
-                c = int(input("Input -1 for yes.. or enter lower quantity "))
-
-                if c == -1:
-                    self.amount = self.available["Price"]*self.available["Quantity"]
-                    self.inventory.update_one(
-                            {"Name":drink},
-                            {"$set":{"Quantity":0,"Available":"N"}})
-                    return self.amount
-
-                elif c < self.available["Quantity"] and c > 0:
-                    self.amount = self.available["Price"]*c
-                    new_quan = self.available["Quantity"] - c
-                    self.inventory.update_one(
-                        {"Name":drink},
-                        {"$set":{"Quantity":new_quan}})
-                    return self.amount
-
-                else:
-                    print("The Transaction for {} could not be processed".format(drink))
-                    return 0    
 
     def get_order_quan(self,drink,quantity):
         
@@ -122,6 +79,31 @@ class Vending_Machine:
                 else:
                     print("The Transaction for {} could not be processed".format(drink))
                     return 0             
+
+    def initiate_trans(self,price):
+        print("Your cart value is {}".format(price))
+        self.cust_amount = sum(list(map(int,input('insert ' + str(price - 0) + ': in denominations of 1,5,25,50 (space separated)  - ').split())))
+        self.change = self.cust_amount - price
+        print("Change amount  =  {}".format(self.change))
+
+        if self.change < 0:
+            print("Insert {} in denominations of 1,5,25,50 ".format(-1*self.change))
+            tries = 3
+            flag = 0
+            for _ in range(tries):
+                amt_inserted = sum(list(map(int,input('insert ' + str(-1*self.change - 0) + ': in denominations of 1,5,25,50 (space separated)  - ').split())))
+
+                if amt_inserted >= -1*self.change:
+                    flag = 1
+                    print("Processing Change")
+                    break        
+            
+            if flag == 0:
+                print("Transaction Terminated")
+        else:
+            print("Processing Your Change")
+       
+        
 
 
 
