@@ -176,14 +176,27 @@ class Vending_Machine:
             self.denominations.update_one({"Deno":item["Deno"]},
                     {"$set":{"Quan":new_quan}})
 
+class run_client:
 
+    def __init__(self,mydb):
+        self.mydb = mydb
+
+    def run(self):
+        choice = -1
+        cl = Vending_Machine(self.mydb)
+
+        while choice == -1:
+            cl.vend()
+            cl.take_order()
+            choice = int(input("Enter -1 for continuing Vending Mode = "))
+
+        print("Exiting Vending Mode ... Thank You....")    
 
 if __name__ == '__main__':
     client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
     mydb = client['Vending_Machine']
-    cl = Vending_Machine(mydb)
-    cl.vend()
-    cl.take_order()
+    rc = run_client(mydb)
+    rc.run()
 
    
     

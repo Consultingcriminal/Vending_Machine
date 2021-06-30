@@ -118,9 +118,9 @@ class run_maintenance:
             else:
                 print("Invalid Input")
 
-            choice = int(input("Enter -1 for continuing = "))
+            choice = int(input("Enter -1 for continuing maintenance mode = "))
 
-        print("Exiting ... Thank You....")        
+        print("Exiting Maintenance ... Thank You....")        
 
                         
 if __name__ == '__main__':
