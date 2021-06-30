@@ -7,6 +7,7 @@ class Maintenance:
         self.inventory = self.my_db["Inventory"]
         self.denominations = self.my_db["Denominations"]
         
+        
     def view_inventory(self):
         self.items = self.inventory.find()
         print("Name---Quantity")
@@ -22,16 +23,9 @@ class Maintenance:
             if quan == 0:
                 print("Could not update {}".format(item["Name"]))
             else:    
-                if item["Available"] == "A":
-                    quan = quan + item["Quantity"]
-                    self.inventory.update_one(
-                        {"Name":item["Name"]},
-                        {"$set":{"Quantity":quan}})    
-            
-                else:
-                    self.inventory.update_one(
-                        {"Name":item["Name"]},
-                        {"$set":{"Quantity":quan,"Available":"A"}})
+                self.inventory.update_one(
+                    {"Name":item["Name"]},
+                    {"$set":{"Quantity":quan}})
 
                 print("Item = {} updated".format(item["Name"]))
 
@@ -42,7 +36,7 @@ class Maintenance:
         b = int(input("Enter the price : "))
         c = int(input("Enter the Quantity : "))
 
-        item = {"Name":a , "Price":b , "Quantity":c , "Available":"A"}
+        item = {"Name":a , "Price":b , "Quantity":c}
         self.inventory.insert_one(item)
 
     def add_denomination(self):
