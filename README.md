@@ -3,7 +3,7 @@
   <h2 align="center">Vending Machine</h2>
 
   <p align="center">
-    A Replication of the working of a Drinks Vending Machine...
+    A Replication of the working of a Drinks Vending Machine using MongoDB
     <br />
   </p>
 </p>
